@@ -45,6 +45,44 @@ class Node:
 
         return root
 
+    
+    """
+        Create a tikz tree from a binary tree
+    """
+    def createTikzTree(self, body=None, depth=None):
+        body = [] if body is None else body
+        depth = 0 if depth is None else depth
+        print(depth)
+
+        ident = "".join(["\t" for _ in range(depth)])
+
+        # First item needs to be the root
+        if len(body) == 0:
+            body.append(ident + "\\node{" + str(self.data) + "}")
+        else:
+            body.append(ident + "node{" + str(self.data) + "}")
+            
+        if self.lS:
+            depth+=1
+            body.append(ident + "child{")
+            self.lS.createTikzTree(body, depth)
+            body.append(ident + "}")
+        if self.rS:
+            if not self.lS:
+                depth+=1
+            body.append(ident+ "child{")
+            self.rS.createTikzTree(body, depth)
+            body.append(ident + "}")
+        return body
+    
+    ## Generate a tikz string from a binary tree (this looks like a mess)
+    def toTikzString(self):
+        return "\\begin{tikzpicture}[\n\tevery node/.style = {minimum width = 1em, draw, circle},\n\tlevel 1/.style ={sibling distance = 3cm},\n\tlevel 2/.style ={sibling distance = 2cm},\n\tlevel 3/.style ={sibling distance = 1cm}]\n" + "\n".join(self.createTikzTree()) + ";\n\\end{tikzpicture}"
+
+
+    ## Generate a working tex file from a tikz string
+    def toTexString(self):
+        return "\\documentclass{article}\n\\usepackage{tikz}\n\\begin{document}\n" + self.toTikzString() + "\n\\end{document}"
 
 class BinarySortedNode(Node):
     def __init__(self, data, lS=None, rS=None,):
@@ -85,6 +123,7 @@ class BinarySortedNode(Node):
         for x in list[1:]:
             root.insertSearchElement(x)
         return root
+
 
 class RPNNode(Node):
     def __init__(self, data, lS=None, rS=None,):

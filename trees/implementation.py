@@ -40,12 +40,12 @@ if __name__ == "__main__":
 
 
     ### Tree based on ordered lists
-    preOrderedList = ["A", "B", "C", "D", "E", "F", "G"]
-    infixOrderedList = ["B", "C", "A", "E", "D", "G", "F"]
-    # postOrderedList = ["C", "B", "E", "G", "F", "D", "A"]
-    treeFromOrderedList = Node.createTreeFromOrderedList(preOrderedList.copy(), infixOrderedList.copy())
-    print(f"\n\nTree from ordered lists:\nPre-Order:\t{preOrderedList}\nInfix-Order:\t{infixOrderedList}")
-    print(f"Tree (post):\t{treeFromOrderedList.toPostOrderList()}")
+    # preOrderedList = ["A", "B", "C", "D", "E", "F", "G"]
+    # infixOrderedList = ["B", "C", "A", "E", "D", "G", "F"]
+    # # postOrderedList = ["C", "B", "E", "G", "F", "D", "A"]
+    # treeFromOrderedList = Node.createTreeFromOrderedList(preOrderedList.copy(), infixOrderedList.copy())
+    # print(f"\n\nTree from ordered lists:\nPre-Order:\t{preOrderedList}\nInfix-Order:\t{infixOrderedList}")
+    # print(f"Tree (post):\t{treeFromOrderedList.toPostOrderList()}")
 
     ### Reverse Polish Notation
     # Create a tree based on a list of numbers
@@ -54,3 +54,16 @@ if __name__ == "__main__":
     print(f"\n\nRPN Tree:\nRPN:\t\t61-84/3+2*+\nTree (infix):\t{rpnTree.toInfixOrderList()} ")
     print(f"Math:\t\t{mathString}")
     print(f"Value:\t\t{rpnTree.calculate()}")
+
+
+    a = Node("A")
+    a.lS = Node("B")
+    a.lS.lS = Node("C")
+    a.lS.lS.rS = Node("D")
+    a.rS = Node("E")
+    a.rS.rS = Node("F")
+    a.rS.lS = Node("G")
+
+    file = open('tree.tex', 'w')
+    file.write(a.toTexString())
+    file.close()

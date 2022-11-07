@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[
+	every node/.style = {minimum width = 1em, draw, circle},
+	level 1/.style ={sibling distance = 3cm},
+	level 2/.style ={sibling distance = 2cm},
+	level 3/.style ={sibling distance = 1cm}]
+\node{A}
+child{
+	node{B}
+	child{
+		node{C}
+		child{
+			node{D}
+		}
+	}
+}
+child{
+	node{E}
+	child{
+		node{G}
+	}
+	child{
+		node{F}
+	}
+};
+\end{tikzpicture}
+\end{document}
