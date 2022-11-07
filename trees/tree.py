@@ -29,13 +29,12 @@ class Node:
         runner.append(self.data)
         return runner
 
-    ## Pre-In List Generator
+    ## Generate a tree based on a pre ordered and infix ordered list
     @staticmethod
     def createTreeFromOrderedList(preList, inList):
-        if len(inList) == 0:
+        if inList is None:
             return None
 
-        ## This works like visited because the pop also changes the array in a sub sub routine
         root = Node(preList.pop(0))
 
         leftIn = inList[:inList.index(root.data)]
@@ -51,6 +50,9 @@ class BinarySortedNode(Node):
     def __init__(self, data, lS=None, rS=None,):
         super().__init__(data, lS, rS)
 
+    """
+        Insert a new node in the tree
+    """
     def insertSearchElement(self, value):
         if value > self.data:
             if self.rS:
@@ -63,13 +65,20 @@ class BinarySortedNode(Node):
             else:
                 self.lS = BinarySortedNode(value)
 
+    """
+        Returns the element if it exists and the number of steps it took to find it
+    """
     def findElement(self, target, n=0):
         if self.data == target:
             return (target, n)
         else:
             n += 1
             return self.lS.findElement(target, n) if target <= self.data else self.rS.findElement(target, n)
+        return None
 
+    """
+        Creates a bineary tree from a list of numbers
+    """
     @staticmethod
     def createTreeFromList(list):
         root = BinarySortedNode(list[0])
@@ -81,6 +90,9 @@ class RPNNode(Node):
     def __init__(self, data, lS=None, rS=None,):
         super().__init__(data, lS, rS)
 
+    """
+        Evaluates the RPN expression and returns the result as float
+    """
     def calculate(self):
         if self.data == "+":
             return self.lS.calculate() + self.rS.calculate()
@@ -93,6 +105,9 @@ class RPNNode(Node):
         else:
             return float(self.data)
 
+    """
+        Returns the RPN expression as a string with parenthesis
+    """
     def toMathString(self, runner=None):
         runner = [] if runner is None else runner
         if self.lS:
@@ -106,6 +121,9 @@ class RPNNode(Node):
                 runner.append(')')
         return runner
 
+    """
+        Creates a RPN tree from a reverse polish notation strings
+    """
     @staticmethod
     def createTreeFromRPNString(string):
         operators = ["+", "-", "*", "/"]
