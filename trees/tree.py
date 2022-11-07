@@ -30,9 +30,8 @@ class Node:
         return runner
 
     ## Generate a tree based on a pre ordered and infix ordered list
-    @staticmethod
     def createTreeFromOrderedList(preList, inList):
-        if inList is None:
+        if inList is None or len(inList) == 0:
             return None
 
         root = Node(preList.pop(0))
@@ -52,7 +51,6 @@ class Node:
     def createTikzTree(self, body=None, depth=None):
         body = [] if body is None else body
         depth = 0 if depth is None else depth
-        print(depth)
 
         ident = "".join(["\t" for _ in range(depth)])
 
@@ -117,7 +115,6 @@ class BinarySortedNode(Node):
     """
         Creates a bineary tree from a list of numbers
     """
-    @staticmethod
     def createTreeFromList(list):
         root = BinarySortedNode(list[0])
         for x in list[1:]:
@@ -150,20 +147,19 @@ class RPNNode(Node):
     def toMathString(self, runner=None):
         runner = [] if runner is None else runner
         if self.lS:
-            if self.data in "*/":
-                runner.append('(')
+            # if self.data in "*/":
+            runner.append('(')
             self.lS.toMathString(runner)
         runner.append(self.data)
         if self.rS:
             self.rS.toMathString(runner)
-            if self.data in "*/":
-                runner.append(')')
+            # if self.data in "*/":
+            runner.append(')')
         return runner
 
     """
         Creates a RPN tree from a reverse polish notation strings
     """
-    @staticmethod
     def createTreeFromRPNString(string):
         operators = ["+", "-", "*", "/"]
         stack = []

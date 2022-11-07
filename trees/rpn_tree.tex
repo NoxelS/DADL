@@ -6,23 +6,35 @@
 	level 1/.style ={sibling distance = 3cm},
 	level 2/.style ={sibling distance = 2cm},
 	level 3/.style ={sibling distance = 1cm}]
-\node{A}
+\node{+}
 child{
-	node{B}
+	node{-}
 	child{
-		node{C}
-		child{
-			node{D}
-		}
+		node{6}
+	}
+	child{
+		node{1}
 	}
 }
 child{
-	node{E}
+	node{*}
 	child{
-		node{G}
+		node{+}
+		child{
+			node{/}
+			child{
+				node{8}
+			}
+			child{
+				node{4}
+			}
+		}
+		child{
+			node{3}
+		}
 	}
 	child{
-		node{F}
+		node{2}
 	}
 };
 \end{tikzpicture}

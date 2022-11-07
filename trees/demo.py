@@ -17,13 +17,15 @@ if __name__ == "__main__":
     infOL = root.toInfixOrderList()
     postOL = root.toPostOrderList()
 
+    # Test lists for correctness
+    assert "".join(preOL) == "ABCDEFG"
+    assert "".join(infOL) == "BCAEDGF"
+    assert "".join(postOL) == "CBEGFDA"
+
     print("Ordered Lists:")
     print(f"Pre-Order:\t{preOL}")
-    assert "".join(preOL) == "ABCDEFG"
     print(f"Infix-Order:\t{infOL}")
-    assert "".join(infOL) == "BCAEDGF"
     print(f"Post-Order:\t{postOL}")
-    assert "".join(postOL) == "CBEGFDA"
 
     ### Binary Search Tree
     list = [75, 15, 85, 10, 30, 130, 100, 150,
@@ -40,30 +42,33 @@ if __name__ == "__main__":
 
 
     ### Tree based on ordered lists
-    # preOrderedList = ["A", "B", "C", "D", "E", "F", "G"]
-    # infixOrderedList = ["B", "C", "A", "E", "D", "G", "F"]
-    # # postOrderedList = ["C", "B", "E", "G", "F", "D", "A"]
-    # treeFromOrderedList = Node.createTreeFromOrderedList(preOrderedList.copy(), infixOrderedList.copy())
-    # print(f"\n\nTree from ordered lists:\nPre-Order:\t{preOrderedList}\nInfix-Order:\t{infixOrderedList}")
-    # print(f"Tree (post):\t{treeFromOrderedList.toPostOrderList()}")
+    preOrderedList = ["A", "B", "C", "D", "E", "F", "G"]
+    infixOrderedList = ["B", "C", "A", "E", "D", "G", "F"]
+    treeFromOrderedList = Node.createTreeFromOrderedList(preOrderedList.copy(), infixOrderedList.copy())
+
+    # Test if the tree is correct
+    postOrderedList = ["C", "B", "E", "G", "F", "D", "A"]
+    assert treeFromOrderedList.toPostOrderList() == postOrderedList
+
+    # Print the tree
+    print(f"\n\nTree from ordered lists:\nPre-Order:\t{preOrderedList}\nInfix-Order:\t{infixOrderedList}")
+    print(f"Tree (post):\t{treeFromOrderedList.toPostOrderList()}")
+
 
     ### Reverse Polish Notation
     # Create a tree based on a list of numbers
     rpnTree =  RPNNode.createTreeFromRPNString("61-84/3+2*+")
     mathString = "".join(rpnTree.toMathString())
+
+    # Test if the tree is correct
+    assert mathString == "((6-1)+(((8/4)+3)*2))"
+    assert rpnTree.calculate() == 15
+
     print(f"\n\nRPN Tree:\nRPN:\t\t61-84/3+2*+\nTree (infix):\t{rpnTree.toInfixOrderList()} ")
     print(f"Math:\t\t{mathString}")
     print(f"Value:\t\t{rpnTree.calculate()}")
 
-
-    a = Node("A")
-    a.lS = Node("B")
-    a.lS.lS = Node("C")
-    a.lS.lS.rS = Node("D")
-    a.rS = Node("E")
-    a.rS.rS = Node("F")
-    a.rS.lS = Node("G")
-
-    file = open('tree.tex', 'w')
-    file.write(a.toTexString())
+    # Create a tex graph in tikz based on the RPN tree
+    file = open('rpn_tree.tex', 'w')
+    file.write(rpnTree.toTexString())
     file.close()
