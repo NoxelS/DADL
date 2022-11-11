@@ -69,6 +69,6 @@ if __name__ == "__main__":
     print(f"Value:\t\t{rpnTree.calculate()}")
 
     # Create a tex graph in tikz based on the RPN tree
-    file = open('rpn_tree.tex', 'w')
+    file = open('rpn_tree.tmp.tex', 'w')
     file.write(rpnTree.toTexString())
     file.close()
