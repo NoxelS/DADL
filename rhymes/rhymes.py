@@ -22,11 +22,11 @@ def isRhyming(word1, word2):
     rest1 = word1[MVG(word1)[1]:]
     rest2 = word2[MVG(word2)[1]:]
 
-    # 1. Rule: If the last vowel is the same, the words rhyme
+    # 1. Rule: If the last vowel aren't the same, the words don't rhyme
     if rest1 != rest2:
         return False
 
-    # 2. Rule:  The MVG and characters after it must contain more than the half of the word
+    # 2. Rule: The MVG and all characters after it must contain more than half of the word
     if (len(rest1) < len(word1)/2) or (len(rest2) < len(word2)/2):
         return False
 
