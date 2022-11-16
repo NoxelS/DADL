@@ -4,7 +4,6 @@ def remove_non_letters(text):
 
 def read_text_from_file(path_to_messgae):
     text = ""
-    # Read text from test-text.txt
     with open(path_to_messgae, "r", encoding="utf-8") as file:
         text = remove_non_letters([x.upper() for x in file.read()])
     return text

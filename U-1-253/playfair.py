@@ -13,12 +13,12 @@ def _2(key):
     return matrix
 
 def _3(text):
-    # Add X between two equal letters
+    # "X" wird zwischen zwei gleiche Buchstaben eingefügt
     for i in range(len(text)-1):
         if text[i] == text[i+1]:
             text.insert(i+1, "X")
     
-    # Add X at the end if the text has an odd length
+    # "X" wird am Ende des Textes eingefügt, wenn die Anzahl der Buchstaben ungerade ist
     if len(text) % 2 == 1:
         text.append("X")
 
@@ -56,8 +56,5 @@ if __name__ == "__main__":
     # 5.
     message = decode_playfair(matrix, chiffre)
     print(f"decoded_bigraph_liste={message}")
-    # Test if decoding worked
-    assert message == bigraph_liste
-    # Revert bigraphs to text
     message = "".join(message).replace("X", "")
     print(f"decoded_text={message}")
