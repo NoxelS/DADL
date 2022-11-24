@@ -1,74 +1,111 @@
 from tree import Node, BinarySortedNode, RPNNode
-import random
+
+def hline(title="", char='=', length=80):
+    n = (length - len(title))//2
+    print(char * n, title, char * n,)
+
+def wrap(title, func, *args):
+    hline(title)
+    func(*args)
 
 if __name__ == "__main__":
-    ### Tree Basics
-    # Create a tree based on the example in the script
-    root = Node('A')
-    root.lS = Node('B')
-    root.rS = Node('D')
-    root.lS.rS = Node('C')
-    root.rS.rS = Node('F')
-    root.rS.lS = Node('E')
-    root.rS.rS.lS = Node('G')
+    # a) - c)
+    rootA = Node(59)
+    a,b = rootA.insert(31,67)
+    c,d = a.insert(12,39)
+    e,f = b.insert(7,22)
+    g,h = c.insert(35,43)
+    i,j = d.insert(62,93)
+    wrap("10. a)-c) Test Tree", rootA.print_tree)
+    
+    # d)
+    hline("10. d) Traversal")
+    print("pre_order_list = ", rootA.to_pre_order_list())
+    print("infix_order_list = ", rootA.to_infix_order_list())
+    print("post_order_list = ", rootA.to_post_order_list())
 
-    # Calculate lists
-    preOL = root.toPreOrderList()
-    infOL = root.toInfixOrderList()
-    postOL = root.toPostOrderList()
+    # e)
+    hline("10. e) PrintTree(node)")
+    rootA.print_tree_pre_order()
 
-    # Test lists for correctness
-    assert "".join(preOL) == "ABCDEFG"
-    assert "".join(infOL) == "BCAEDGF"
-    assert "".join(postOL) == "CBEGFDA"
+    # 11.
+    hline("11. Searching for 39 in the tree")
+    hline("Pre-ordered Search", char='.')
+    print("Found:", rootA.find_element_pre_ordered(39))
+    hline("Post-ordered Search", char='.')
+    print("Found:", rootA.find_element_post_ordered(39))
+    hline("Infix-ordered Search", char='.')
+    print("Found:", rootA.find_element_infix_ordered(39))
 
-    print("Ordered Lists:")
-    print(f"Pre-Order:\t{preOL}")
-    print(f"Infix-Order:\t{infOL}")
-    print(f"Post-Order:\t{postOL}")
+    # 12.
+    hline("12. Create Tree from ordered list")
+    preList = rootA.to_pre_order_list()
+    infixList = rootA.to_infix_order_list()
+    postList = rootA.to_post_order_list()
+    print("Pre-ordered list:", preList)
+    print("Infix-ordered list:", infixList)
+    print("Post-ordered list:", postList)
 
-    ### Binary Search Tree
-    list = [75, 15, 85, 10, 30, 130, 100, 150,
-            115, 140, 160, 120, 145, 170, 190]
+    hline("From pre and infix", char='.')
+    rootB = Node.create_tree_from_pre_in(preList, infixList)
+    print("Tree:")
+    rootB.print_tree()
+    print("Pre-ordered list:", rootB.to_pre_order_list())
 
-    # Create a tree based on a list of numbers
-    searchTree =  BinarySortedNode.createTreeFromList(list)
-    print(f"\n\nSearched Tree:\nList:\t\t{list}\nTree (infix):\t{searchTree.toInfixOrderList()} ")
+    hline("From infix and post", char='.')
+    rootC = Node.create_tree_from_in_post(infixList, postList)
+    print("Tree:")
+    rootC.print_tree()
+    print("Post-ordered list:", rootC.to_post_order_list())
 
-    # Finding an element in the tree
-    target = random.choice(list)
-    element, depth = searchTree.findElement(target)
-    print(f"Finding \"{target}\" in the Tree took {depth} compraisons")
+    hline("From pre and post", char='.')
+    rootD = Node.create_tree_from_pre_post(preList, postList)
+    print("Tree:")
+    rootD.print_tree()
+    print("Pre-ordered list:", rootD.to_pre_order_list())
 
+    # 13.
+    hline("13. Create sort tree from unordered list")
+    unorderedList = [59, 31, 67, 12, 39, 7, 22, 35, 43, 62, 93]
+    rootE = BinarySortedNode.create_tree_from_list(unorderedList)
+    print("Unordered list:", unorderedList)
+    print("Tree:")
+    rootE.print_tree()
 
-    ### Tree based on ordered lists
-    preOrderedList = ["A", "B", "C", "D", "E", "F", "G"]
-    infixOrderedList = ["B", "C", "A", "E", "D", "G", "F"]
-    treeFromOrderedList = Node.createTreeFromOrderedList(preOrderedList.copy(), infixOrderedList.copy())
+    # 14.
+    hline("14. Remove element from sorted tree")
+    print("Tree:")
+    rootE.print_tree()
+    print("Remove 31")
+    rootE.remove_element(31)
+    print("Tree:")
+    rootE.print_tree()
 
-    # Test if the tree is correct
-    postOrderedList = ["C", "B", "E", "G", "F", "D", "A"]
-    assert treeFromOrderedList.toPostOrderList() == postOrderedList
+    # 15.
+    hline("15. Create balanced tree from unordered list")
+    unorderedList = [59, 31, 67, 12, 39, 7, 22, 35, 43, 62, 93, 1, 23, 2, 5]
+    rootF = BinarySortedNode.create_balanced_tree_from_list(unorderedList)
+    print("Unordered list:", unorderedList)
+    print("Tree:")
+    rootF.print_tree()
 
-    # Print the tree
-    print(f"\n\nTree from ordered lists:\nPre-Order:\t{preOrderedList}\nInfix-Order:\t{infixOrderedList}")
-    print(f"Tree (post):\t{treeFromOrderedList.toPostOrderList()}")
+    # 16.
+    hline("16. Create RPN tree from RPN list")
+    rpnString = "61-84/3+2*+"
+    rootG = RPNNode.create_tree_from_RPN_string(rpnString)
+    print("RPN string:", rpnString)
+    print("Tree:")
+    rootG.print_tree()
+    print("Result:", rootG.calculate())
+    print("Math string:", "".join(rootG.to_math_string()))
 
-
-    ### Reverse Polish Notation
-    # Create a tree based on a list of numbers
-    rpnTree =  RPNNode.createTreeFromRPNString("61-84/3+2*+")
-    mathString = "".join(rpnTree.toMathString())
-
-    # Test if the tree is correct
-    assert mathString == "((6-1)+(((8/4)+3)*2))"
-    assert rpnTree.calculate() == 15
-
-    print(f"\n\nRPN Tree:\nRPN:\t\t61-84/3+2*+\nTree (infix):\t{rpnTree.toInfixOrderList()} ")
-    print(f"Math:\t\t{mathString}")
-    print(f"Value:\t\t{rpnTree.calculate()}")
-
-    # Create a tex graph in tikz based on the RPN tree
-    file = open('rpn_tree.tmp.tex', 'w')
-    file.write(rpnTree.toTexString())
-    file.close()
+    #17. 
+    hline("17. Generate Tikz Tree")
+    tikzString = rootA.to_tikz_string()
+    print("Tree:")
+    rootA.print_tree()
+    print("Tikz Tree:")
+    print(tikzString)
+    print("Tikz Tree in file 'tikzTree.tmp.tex'")
+    with open("tikzTree.tmp.tex", "w") as f:
+        f.write(rootA.to_tex_string())

@@ -2,53 +2,119 @@ class Node:
     def __init__(self, data, lS=None, rS=None,):
         self.lS, self.rS, self.data = lS, rS, data
 
-    def toPreOrderList(self, runner=None):
+    def insert(self, ldata, rdata):
+        if self.lS or self.rS:
+            raise Exception("Cannot insert into a node with children")
+        self.lS = Node(ldata)
+        self.rS = Node(rdata)
+        return self.lS, self.rS
+
+    ## We could also use travel and visit methods to generate the list but this is compact
+    def to_pre_order_list(self, runner=None):
         runner = [] if runner is None else runner
         runner.append(self.data)
         if self.lS:
-            self.lS.toPreOrderList(runner)
+            self.lS.to_pre_order_list(runner)
         if self.rS:
-            self.rS.toPreOrderList(runner)
+            self.rS.to_pre_order_list(runner)
         return runner
 
-    def toInfixOrderList(self, runner=None):
+    ## We could also use travel and visit methods to generate the list but this is compact
+    def to_infix_order_list(self, runner=None):
         runner = [] if runner is None else runner
         if self.lS:
-            self.lS.toInfixOrderList(runner)
+            self.lS.to_infix_order_list(runner)
         runner.append(self.data)
         if self.rS:
-            self.rS.toInfixOrderList(runner)
+            self.rS.to_infix_order_list(runner)
         return runner
 
-    def toPostOrderList(self, runner=None):
+    ## We could also use travel and visit methods to generate the list but this is compact
+    def to_post_order_list(self, runner=None):
         runner = [] if runner is None else runner
         if self.lS:
-            self.lS.toPostOrderList(runner)
+            self.lS.to_post_order_list(runner)
         if self.rS:
-            self.rS.toPostOrderList(runner)
+            self.rS.to_post_order_list(runner)
         runner.append(self.data)
         return runner
 
-    ## Generate a tree based on a pre ordered and infix ordered list
-    def createTreeFromOrderedList(preList, inList):
-        if inList is None or len(inList) == 0:
+    @staticmethod
+    def create_tree_from_pre_in(pre_list, in_list):
+        if in_list is None or len(in_list) == 0:
             return None
 
-        root = Node(preList.pop(0))
+        root = Node(pre_list.pop(0))
 
-        leftIn = inList[:inList.index(root.data)]
-        root.lS = Node.createTreeFromOrderedList(preList, leftIn)
+        left_in = in_list[:in_list.index(root.data)]
+        root.lS = Node.create_tree_from_pre_in(pre_list, left_in)
 
-        rightIn = inList[inList.index(root.data) + 1:]
-        root.rS = Node.createTreeFromOrderedList(preList, rightIn)
+        right_in = in_list[in_list.index(root.data) + 1:]
+        root.rS = Node.create_tree_from_pre_in(pre_list, right_in)
 
         return root
 
-    
-    """
-        Create a tikz tree from a binary tree
-    """
-    def createTikzTree(self, body=None, depth=None):
+    @staticmethod
+    def create_tree_from_in_post(in_list, post_list):
+        if in_list is None or len(in_list) == 0:
+            return None
+
+        root = Node(post_list.pop())
+
+        right_in = in_list[in_list.index(root.data) + 1:]
+        root.rS = Node.create_tree_from_in_post(right_in, post_list)
+
+        left_in = in_list[:in_list.index(root.data)]
+        root.lS = Node.create_tree_from_in_post(left_in, post_list)
+
+        return root
+
+    @staticmethod
+    def create_tree_from_pre_post(pre_list, post_list):
+        # Currently not working
+        return Node(None)
+
+    def print_tree(self, level=0):
+        if self.rS:
+            self.rS.print_tree(level + 1)
+        print(' ' * 5 * level + str(self.data))
+        if self.lS:
+            self.lS.print_tree(level + 1)
+
+    def print_tree_pre_order(self):
+        for i,s in enumerate(self.to_pre_order_list()):
+            print(str(s), end="\n" if (i+1) % 3 == 0 else " ")
+        
+        # End line if not already ended
+        if len(self.to_pre_order_list()) % 3 != 0:
+            print()
+
+    def __str__(self):
+        return str(self.data or "-")
+
+    def visit(self, value):
+        print(f"Visiting {self}")
+        return self if self.data == value else None
+
+    def find_element_pre_ordered(self, target_data):
+        if self:
+            return self.visit(target_data) or \
+            (self.lS.find_element_pre_ordered(target_data) if self.lS else None) or \
+            (self.rS.find_element_pre_ordered(target_data) if self.rS else None)
+
+    def find_element_post_ordered(self, target_data):
+        if self:
+            return (self.lS.find_element_post_ordered(target_data) if self.lS else None) or \
+            (self.rS.find_element_post_ordered(target_data) if self.rS else None) or \
+            self.visit(target_data)
+
+    def find_element_infix_ordered(self, target_data):
+        if self:
+            return (self.lS.find_element_infix_ordered(target_data) if self.lS else None) or \
+            self.visit(target_data) or \
+            (self.rS.find_element_infix_ordered(target_data) if self.rS else None)
+
+    def create_tikz_tree(self, body=None, depth=None):
         body = [] if body is None else body
         depth = 0 if depth is None else depth
 
@@ -63,72 +129,105 @@ class Node:
         if self.lS:
             depth+=1
             body.append(ident + "child{")
-            self.lS.createTikzTree(body, depth)
+            self.lS.create_tikz_tree(body, depth)
             body.append(ident + "}")
         if self.rS:
             if not self.lS:
                 depth+=1
             body.append(ident+ "child{")
-            self.rS.createTikzTree(body, depth)
+            self.rS.create_tikz_tree(body, depth)
             body.append(ident + "}")
         return body
-    
-    ## Generate a tikz string from a binary tree (this looks like a mess)
-    def toTikzString(self):
-        return "\\begin{tikzpicture}[\n\tevery node/.style = {minimum width = 1em, draw, circle},\n\tlevel 1/.style ={sibling distance = 3cm},\n\tlevel 2/.style ={sibling distance = 2cm},\n\tlevel 3/.style ={sibling distance = 1cm}]\n" + "\n".join(self.createTikzTree()) + ";\n\\end{tikzpicture}"
 
+    def to_tikz_string(self):
+        return "\\begin{tikzpicture}[\n\tevery node/.style = {minimum width = 1em, draw, circle},\n\tlevel 1/.style ={sibling distance = 3cm},\n\tlevel 2/.style ={sibling distance = 2cm},\n\tlevel 3/.style ={sibling distance = 1cm}]\n" + "\n".join(self.create_tikz_tree()) + ";\n\\end{tikzpicture}"
 
-    ## Generate a working tex file from a tikz string
-    def toTexString(self):
-        return "\\documentclass{article}\n\\usepackage{tikz}\n\\begin{document}\n" + self.toTikzString() + "\n\\end{document}"
+    def to_tex_string(self):
+        return "\\documentclass{article}\n\\usepackage{tikz}\n\\begin{document}\n" + self.to_tikz_string() + "\n\\end{document}"
 
 class BinarySortedNode(Node):
     def __init__(self, data, lS=None, rS=None,):
         super().__init__(data, lS, rS)
 
-    """
-        Insert a new node in the tree
-    """
-    def insertSearchElement(self, value):
+    def insert_search_element(self, value):
+        # If the value is less than the current node it goes to the left
         if value > self.data:
+            # Traverse recursively if there is a right node
             if self.rS:
-                self.rS.insertSearchElement(value)
+                self.rS.insert_search_element(value)
             else:
                 self.rS = BinarySortedNode(value)
+        # If the value is greater than the current node it goes to the right
         elif value <= self.data:
+            # Traverse recursively if there is a left node
             if self.lS:
-                self.lS.insertSearchElement(value)
+                self.lS.insert_search_element(value)
             else:
                 self.lS = BinarySortedNode(value)
 
-    """
-        Returns the element if it exists and the number of steps it took to find it
-    """
-    def findElement(self, target, n=0):
-        if self.data == target:
-            return (target, n)
+    def find_element(self, target_data, n=0):
+        if self.data == target_data:
+            return (self, n)
+        # Search recursively on the left subtree if the target is less than the current node and wise versa for the right subtree
         else:
             n += 1
-            return self.lS.findElement(target, n) if target <= self.data else self.rS.findElement(target, n)
-        return None
+            return self.lS.find_element(target_data, n) if target_data <= self.data else self.rS.find_element(target_data, n)
 
-    """
-        Creates a bineary tree from a list of numbers
-    """
-    def createTreeFromList(list):
+    def find_min(self):
+        # Min is the leftmost node in the tree
+        if self.lS:
+            return self.lS.find_min()
+        return self
+
+    def remove_element(self, target_data):
+        # If the target is found, we need to edit the children
+        if self.data == target_data:
+            # No children: Just remove the node
+            if not self.lS and not self.rS:
+                return None
+            # One child: Replace the node with the only child
+            elif not self.lS or not self.rS:
+                return self.lS if self.lS else self.rS
+            # Two children: Replace the node with the minimum of the right subtree
+            else:
+                # Find the min of the right sub tree
+                min_node = self.rS.find_min()
+                self.data = min_node.data
+                self.rS = self.rS.remove_element(min_node.data)
+                return self
+        # If the target is less than the current node, search the left subtree
+        elif target_data < self.data:
+            self.lS = self.lS.remove_element(target_data)
+        # If the target is greater than the current node, search the right subtree
+        else:
+            self.rS = self.rS.remove_element(target_data)
+        return self
+
+    @staticmethod
+    def create_tree_from_list(list):
         root = BinarySortedNode(list[0])
+        # Just insert the rest of the list
         for x in list[1:]:
-            root.insertSearchElement(x)
+            root.insert_search_element(x)
         return root
 
+    @staticmethod
+    def create_balanced_tree_from_list(list):
+        if len(list) == 0:
+            return None
+        else:
+            # The middle of the list is the root of the tree and the left and right parts are the left and right subtrees
+            mid = len(list) // 2
+            root = BinarySortedNode(list[mid])
+            # Recursively create the left and right subtrees
+            root.lS = BinarySortedNode.create_balanced_tree_from_list(list[:mid])
+            root.rS = BinarySortedNode.create_balanced_tree_from_list(list[mid+1:])
+            return root
 
 class RPNNode(Node):
     def __init__(self, data, lS=None, rS=None,):
         super().__init__(data, lS, rS)
 
-    """
-        Evaluates the RPN expression and returns the result as float
-    """
     def calculate(self):
         if self.data == "+":
             return self.lS.calculate() + self.rS.calculate()
@@ -144,23 +243,22 @@ class RPNNode(Node):
     """
         Returns the RPN expression as a string with parenthesis
     """
-    def toMathString(self, runner=None):
+    def to_math_string(self):
+        return "".join(self.to_math_string_helper()[1:-1])
+
+    def to_math_string_helper(self, runner=None):
         runner = [] if runner is None else runner
         if self.lS:
-            # if self.data in "*/":
             runner.append('(')
-            self.lS.toMathString(runner)
+            self.lS.to_math_string_helper(runner)
         runner.append(self.data)
         if self.rS:
-            self.rS.toMathString(runner)
-            # if self.data in "*/":
+            self.rS.to_math_string_helper(runner)
             runner.append(')')
         return runner
 
-    """
-        Creates a RPN tree from a reverse polish notation strings
-    """
-    def createTreeFromRPNString(string):
+    @staticmethod
+    def create_tree_from_RPN_string(string):
         operators = ["+", "-", "*", "/"]
         stack = []
         for char in string:
