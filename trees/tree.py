@@ -216,6 +216,8 @@ class BinarySortedNode(Node):
         if len(list) == 0:
             return None
         else:
+            # Sort the list
+            list = sorted(list)
             # The middle of the list is the root of the tree and the left and right parts are the left and right subtrees
             mid = len(list) // 2
             root = BinarySortedNode(list[mid])
