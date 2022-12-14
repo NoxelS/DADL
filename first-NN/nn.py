@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import json
 
 def sigmoid(z):
     return 1.0/(1.0+np.exp(-z))
@@ -18,20 +19,12 @@ class Network(object):
         # Weight for layer i and j
         self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
 
-        print(len(self.biases))
-
     # Return the output of the network if "a" is input
     def feedforward(self, a):
         A = a.copy() # Copy the input so we don't change it
         for b, w in zip(self.biases, self.weights): # Layer for layer
             A = sigmoid(np.dot(w, A)+b)
         return A
-
-    def print(self):
-        print("Network: ", self.sizes)
-        print("Biases: ", self.biases)
-        print("Weights: ", self.weights)
-
 
     """ 
         Train the neural network using mini - batch stochastic gradient descent . The
@@ -41,7 +34,7 @@ class Network(object):
         against the test data after each epoch , and partial progress printed out.
         This is useful for tracking progress , but slows things down substantially .
     """
-    def SGD(self, training_data, epochs, mini_batch_size, eta, test_data =None):
+    def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
         if test_data : n_test = len(test_data)
         n = len(training_data)
         for j in range(epochs):
@@ -53,7 +46,7 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data :
-                print("Epoch {0}: {1} / {2}".format(j, self.evaluate(test_data ), n_test))
+                print("Epoch {0}: {1} / {2}".format(j, self.evaluate(test_data), n_test))
             else:
                 print("Epoch {0} complete".format(j))
 
@@ -70,32 +63,60 @@ class Network(object):
         self.weights = [w-(eta/len(mini_batch))*nw for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b-(eta/len(mini_batch))*nb for b, nb in zip(self.biases, nabla_b)]
 
-    def backprop(self, A, Ysoll):
+    def backprop(self, x, y):
         # nabla_b and nabla_w are the gradient of the cost function ?
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
-        activation = A
-        activations = [A] # List to store all the activations, layer by layer
+        activation = x
+        activations = [x] # List to store all the activations, layer by layer
         zs = [] # List to store all the z vectors, layer by layer
-        for b,w in zip(self.biases, self.weights):
+
+        # Feedforward
+        for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation)+b
             zs.append(z)
             activation = sigmoid(z)
             activations.append(activation)
-
-        delta = (activations[-1]-Ysoll) * sigprime(zs[-1])
-
+        
+        # Backward pass
+        delta = self.cost_derivative(activations[-1], y) * sigprime(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
 
-        for j in range(2, self.num_layers):
-            z = zs[-j]
+        # L-1 th layer to the second layer
+        for l in range(2, self.num_layers):
+            z = zs[-l]
             sp = sigprime(z)
-            delta = np.dot(self.weights[-j+1].transpose(), delta) * sp
-            nabla_b[-j] = delta
-            nabla_w[-j] = np.dot(delta, activations[-j-1].transpose())
+            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+            nabla_b[-l] = delta
+            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+        return (nabla_b, nabla_w)
 
+    def evaluate(self, test_data):
+        test_results = [(np.argmax(self.feedforward(x)), np.argmax(y)) for (x, y) in test_data]
+        return sum(int(x == y) for (x, y) in test_results)
+
+    def cost_derivative(self, output_activations, y):
+        return (output_activations-y)
+
+    def save(self, filename):
+        data = {"sizes": self.sizes,
+                "weights": [w.tolist() for w in self.weights],
+                "biases": [b.tolist() for b in self.biases]}
+        with open(filename, 'w') as f:
+            json.dump(data, f)
+        f.close()
+
+    @staticmethod
+    def load(filename):
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        f.close()
+        net = Network(data["sizes"])
+        net.weights = [np.array(w) for w in data["weights"]]
+        net.biases = [np.array(b) for b in data["biases"]]
+        return net
 
 if(__name__ == '__main__'):
     net = Network([2, 3, 1])
