@@ -2,6 +2,8 @@ import numpy as np
 import random
 import json
 from matplotlib import pyplot as plt
+
+# Force matplotlib to not use any Xwindows backend because my wsl is broken
 import matplotlib
 matplotlib.use('Agg') # no UI backend
 
@@ -29,13 +31,12 @@ class Network(object):
             A = sigmoid(np.dot(w, A)+b)
         return A
 
-    def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
+    def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None, silent=False):
         plotX = []
         plotY = []
-
+        accuracy = 0
         if test_data : n_test = len(test_data)
         n = len(training_data)
-        best_eval = 0
         for j in range(epochs):
             random.shuffle(training_data)
             mini_batches = [
@@ -45,27 +46,32 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data :
-                eval= self.evaluate(test_data)
-                if eval/n_test > best_eval:
-                    best_eval = eval/n_test 
+                last_eval = self.evaluate(test_data)
                 plotX.append(j)
-                plotY.append(eval)
-                print("Epoch {0}: {1} / {2}".format(j, eval, n_test))
+                plotY.append(last_eval)
+                accuracy = last_eval/n_test
+                if not silent:
+                    print("Epoch {0}: {1} / {2} ({3}%)".format(j, last_eval, n_test, np.round(100 * last_eval/n_test, 2)))
             else:
-                print("Epoch {0} complete".format(j))
+                if not silent:
+                    print("Epoch {0} complete".format(j))
+            
+            # Abort training if accuracy is too low
+            if j > 3 and accuracy < 0.9:
+                if not silent:
+                    print("Accuracy is too low, aborting training")
+                return accuracy
+
         if test_data :
             plt.plot(plotX, np.multiply(plotY,1/n_test))
             plt.xlabel("Epoch")
-            plt.ylabel("Correct")
+            plt.ylabel("Accuracy")
             plt.title("Training for {0} epochs [{1}, {2}, {3}]".format(epochs, self.sizes[0], self.sizes[1], self.sizes[2]))
             plt.savefig("training.png")
+            if not silent:
+                print("Training complete, saved plot as training.png")
 
-        self.save("trained_network_best_" + str(np.round(100 * best_eval, 2)) + ".dat")
-
-        try:
-            plt.show()
-        except:
-            pass
+        return accuracy
 
     def update_mini_batch(self, mini_batch, eta):
         # nabla_b and nabla_w are the gradient of the cost function
@@ -117,6 +123,7 @@ class Network(object):
     def cost_derivative(self, output_activations, y):
         return (output_activations-y)
 
+    # Saves the weights and biases of a network to a file
     def save(self, filename):
         data = {"sizes": self.sizes,
                 "weights": [w.tolist() for w in self.weights],
@@ -125,6 +132,7 @@ class Network(object):
             json.dump(data, f)
         f.close()
 
+    # Loads a network from a file
     @staticmethod
     def load(filename):
         with open(filename, 'r') as f:
@@ -134,6 +142,3 @@ class Network(object):
         net.weights = [np.array(w) for w in data["weights"]]
         net.biases = [np.array(b) for b in data["biases"]]
         return net
-
-if(__name__ == '__main__'):
-    net = Network([2, 3, 1])

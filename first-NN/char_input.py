@@ -25,7 +25,7 @@ pen_down, but3_down, old_x , old_y = False, False, 0, 0
 
 
 ########################################################################  
-output = "training.dat"
+output = "data/training.dat"
 print("Writing to " + output)
 
 ########################################################################  
