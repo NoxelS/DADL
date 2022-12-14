@@ -26,14 +26,6 @@ class Network(object):
             A = sigmoid(np.dot(w, A)+b)
         return A
 
-    """ 
-        Train the neural network using mini - batch stochastic gradient descent . The
-        " training_data " is a list of tuples "(x, y)" representing the training
-        inputs and the desired outputs . The other non - optional parameters are self -
-        explanatory . If " test_data " is provided then the network will be evaluated
-        against the test data after each epoch , and partial progress printed out.
-        This is useful for tracking progress , but slows things down substantially .
-    """
     def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
         if test_data : n_test = len(test_data)
         n = len(training_data)

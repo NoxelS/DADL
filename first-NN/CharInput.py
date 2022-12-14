@@ -56,18 +56,32 @@ while True:
     board = np.zeros((win_height, win_width), np.uint8)
     cv2.rectangle(board, (50,50), (100,100), color=255, thickness=1)
   elif key in range(ord('a'),ord('z')+1):
-    print(chr(key), end=' ')
     cv2.rectangle(board, (50,50), (100,100), color=0, thickness=1)
     win = board[50:100, 50:100]
     win = ndimage.filters.gaussian_filter(win, sigma=1)
 
+    data = [chr(key)]
+
     for i in range(50):
       for j in range(50):
-        print(win[i][j], end=' ')
+        data.append(win[i][j])
 
-    print()
+
+    with open('validation.dat', 'a') as f:
+      f.write('\n')
+      f.write(' '.join(map(str, data)))
+      print("Added " + chr(key) + " to training.dat")
+
+    currentDataset = ""
+    with open('validation.dat', 'r') as f:
+      chars = [(l.split())[0] for l in f.readlines()]
+      lines = [chars.count(c) for c in set(['a','b','c'])]
+      currentDataset = "Current dataset:" + ", ".join([(['a','b','c'][i]) + ": " + str(lines[i]) for i in range(3)])
+
+
     board = np.zeros((win_height, win_width), np.uint8)
     cv2.rectangle(board, (50,50), (100,100), color=255, thickness=1)
+    cv2.putText(board, currentDataset, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
 
   cv2.imshow('Board', board)
     
