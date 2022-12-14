@@ -1,6 +1,9 @@
 import numpy as np
 import random
 import json
+from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg') # no UI backend
 
 def sigmoid(z):
     return 1.0/(1.0+np.exp(-z))
@@ -27,8 +30,12 @@ class Network(object):
         return A
 
     def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
+        plotX = []
+        plotY = []
+
         if test_data : n_test = len(test_data)
         n = len(training_data)
+        best_eval = 0
         for j in range(epochs):
             random.shuffle(training_data)
             mini_batches = [
@@ -38,9 +45,27 @@ class Network(object):
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data :
-                print("Epoch {0}: {1} / {2}".format(j, self.evaluate(test_data), n_test))
+                eval= self.evaluate(test_data)
+                if eval/n_test > best_eval:
+                    best_eval = eval/n_test 
+                plotX.append(j)
+                plotY.append(eval)
+                print("Epoch {0}: {1} / {2}".format(j, eval, n_test))
             else:
                 print("Epoch {0} complete".format(j))
+        if test_data :
+            plt.plot(plotX, np.multiply(plotY,1/n_test))
+            plt.xlabel("Epoch")
+            plt.ylabel("Correct")
+            plt.title("Training for {0} epochs [{1}, {2}, {3}]".format(epochs, self.sizes[0], self.sizes[1], self.sizes[2]))
+            plt.savefig("training.png")
+
+        self.save("trained_network_best_" + str(np.round(100 * best_eval, 2)) + ".dat")
+
+        try:
+            plt.show()
+        except:
+            pass
 
     def update_mini_batch(self, mini_batch, eta):
         # nabla_b and nabla_w are the gradient of the cost function

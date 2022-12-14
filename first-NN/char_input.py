@@ -25,6 +25,10 @@ pen_down, but3_down, old_x , old_y = False, False, 0, 0
 
 
 ########################################################################  
+output = "training.dat"
+print("Writing to " + output)
+
+########################################################################  
 def mouse_cb(event, x, y, flags, param):
   global board, pen_down, but3_down, old_x, old_y
   but3_down = flags & 0x4
@@ -58,7 +62,7 @@ while True:
   elif key in range(ord('a'),ord('z')+1):
     cv2.rectangle(board, (50,50), (100,100), color=0, thickness=1)
     win = board[50:100, 50:100]
-    win = ndimage.filters.gaussian_filter(win, sigma=1)
+    win = ndimage.gaussian_filter(win, sigma=1)
 
     data = [chr(key)]
 
@@ -67,13 +71,13 @@ while True:
         data.append(win[i][j])
 
 
-    with open('validation.dat', 'a') as f:
+    with open(output, 'a') as f:
       f.write('\n')
       f.write(' '.join(map(str, data)))
-      print("Added " + chr(key) + " to training.dat")
+      print("Added " + chr(key) + " to " + output)
 
     currentDataset = ""
-    with open('validation.dat', 'r') as f:
+    with open(output, 'r') as f:
       chars = [(l.split())[0] for l in f.readlines()]
       lines = [chars.count(c) for c in set(['a','b','c'])]
       currentDataset = "Current dataset:" + ", ".join([(['a','b','c'][i]) + ": " + str(lines[i]) for i in range(3)])

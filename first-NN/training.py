@@ -30,8 +30,8 @@ def read_training_data(filename):
     return training_data
 
 def train_network(training_data, test_data=None):
-    net = Network([2500, 250, 3])
-    net.SGD(training_data, 60, 10, 3, test_data)
+    net = Network([2500, 10,  3])
+    net.SGD(training_data, 30, 10, 3, test_data)
     net.save("trained_network.dat")
     print("Done training network. Saved to trained_network.dat")
 

@@ -49,8 +49,10 @@ board = np.zeros((win_height, win_width), np.uint8)
 cv2.rectangle(board, (50,50), (100,100), color=255, thickness=1)
 #cv2.imshow('Board', board)
 
-# NN
-nn = Network.load("trained_network.dat")
+# NN - currently using trained_network_best_98.0.dat
+networkPath = "trained_network_best_98.0.dat"
+nn = Network.load(networkPath)
+print("Current network:", networkPath)
 
 while True:
   key = cv2.waitKey(20) & 0xFF
