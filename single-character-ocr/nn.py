@@ -3,9 +3,9 @@ import random
 import json
 from matplotlib import pyplot as plt
 
-# Force matplotlib to not use any Xwindows backend because my wsl is broken
 import matplotlib
-matplotlib.use('Agg') # no UI backend
+# Force matplotlib to not use any Xwindows backend because my wsl is broken
+matplotlib.use('Agg')
 
 def sigmoid(z):
     return 1.0/(1.0+np.exp(-z))
@@ -17,34 +17,36 @@ class Network(object):
     def __init__(self, sizes):
         self.num_layers = len(sizes)
         self.sizes = sizes
-
-        # Biases
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-
-        # Weight for layer i and j
         self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
 
-    # Return the output of the network if "a" is input
     def feedforward(self, a):
-        A = a.copy() # Copy the input so we don't change it
-        for b, w in zip(self.biases, self.weights): # Layer for layer
+        A = a.copy() # Copy the input so we make sure we don't change it
+        for b, w in zip(self.biases, self.weights): # Layer for layer calculating the output
             A = sigmoid(np.dot(w, A)+b)
         return A
 
     def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None, silent=False):
-        plotX = []
-        plotY = []
-        accuracy = 0
+        plotX, plotY = [], [] # Used for plotting loss
+        accuracy = 0 # Used for aborting training if accuracy is too low
+
         if test_data : n_test = len(test_data)
         n = len(training_data)
+
         for j in range(epochs):
-            random.shuffle(training_data)
-            mini_batches = [
+            # Shuffle the training data so we don't get stuck in a local minimum
+            # and split the trainign data into mini batches
+            random.shuffle(training_data) 
+            mini_batches = [ 
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)
             ]
-            for mini_batch in mini_batches:
+
+            # Update the weights and biases for each mini batch
+            for mini_batch in mini_batches: 
                 self.update_mini_batch(mini_batch, eta)
+
+            # Evaluate the network after each epoch and print the current accuracy for the test data
             if test_data :
                 last_eval = self.evaluate(test_data)
                 plotX.append(j)
@@ -62,6 +64,7 @@ class Network(object):
                     print("Accuracy is too low, aborting training")
                 return accuracy
 
+        # Plot the accuracy over epochs and save the plot
         if test_data :
             plt.plot(plotX, np.multiply(plotY,1/n_test))
             plt.xlabel("Epoch")
@@ -74,7 +77,6 @@ class Network(object):
         return accuracy
 
     def update_mini_batch(self, mini_batch, eta):
-        # nabla_b and nabla_w are the gradient of the cost function
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
@@ -87,7 +89,6 @@ class Network(object):
         self.biases = [b-(eta/len(mini_batch))*nb for b, nb in zip(self.biases, nabla_b)]
 
     def backprop(self, x, y):
-        # nabla_b and nabla_w are the gradient of the cost function ?
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
@@ -116,6 +117,7 @@ class Network(object):
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
         return (nabla_b, nabla_w)
 
+    # Evaluates the network for a give test_data set and returns the number of correct answers
     def evaluate(self, test_data):
         test_results = [(np.argmax(self.feedforward(x)), np.argmax(y)) for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
@@ -135,10 +137,14 @@ class Network(object):
     # Loads a network from a file
     @staticmethod
     def load(filename):
-        with open(filename, 'r') as f:
-            data = json.load(f)
-        f.close()
-        net = Network(data["sizes"])
-        net.weights = [np.array(w) for w in data["weights"]]
-        net.biases = [np.array(b) for b in data["biases"]]
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+            f.close()
+            net = Network(data["sizes"])
+            net.weights = [np.array(w) for w in data["weights"]]
+            net.biases = [np.array(b) for b in data["biases"]]
+        except:
+            print("Error loading network. Is your network saved as a json file?")
+            return None
         return net

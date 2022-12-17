@@ -8,27 +8,25 @@
 # (evtl. via package-manager)
 ########################################################################  
 
-
-########################################################################  
 import cv2			# pip3 install opencv-python
 import numpy as np 
 from scipy import ndimage
-########################################################################  
+import sys
 
+output = "data/training.dat"
+# read command line arguments
+if len(sys.argv) > 1:
+  output = sys.argv[1]
+  print("Writing to " + output)
+else:
+  print("No output file given. Writing to default output " + output)
 
-########################################################################  
 # Parameter
 win_width, win_height	= 400,200
 # globals for mouse_callback
 pen_down, but3_down, old_x , old_y = False, False, 0, 0
-########################################################################  
 
 
-########################################################################  
-output = "data/training.dat"
-print("Writing to " + output)
-
-########################################################################  
 def mouse_cb(event, x, y, flags, param):
   global board, pen_down, but3_down, old_x, old_y
   but3_down = flags & 0x4
@@ -40,10 +38,8 @@ def mouse_cb(event, x, y, flags, param):
     old_x, old_y = x, y
   elif event == cv2.EVENT_LBUTTONUP:
     pen_down = False
-########################################################################  
 
 
-########################################################################  
 # main
 cv2.namedWindow('Board')
 cv2.moveWindow('Board', 1000,100)
@@ -78,7 +74,7 @@ while True:
 
     currentDataset = ""
     with open(output, 'r') as f:
-      chars = [(l.split())[0] for l in f.readlines()]
+      chars = [((l.split())[0] if l else 0) for l in f.readlines()]
       lines = [chars.count(c) for c in set(['a','b','c'])]
       currentDataset = "Current dataset:" + ", ".join([(['a','b','c'][i]) + ": " + str(lines[i]) for i in range(3)])
 
@@ -90,6 +86,4 @@ while True:
   cv2.imshow('Board', board)
     
 cv2.destroyAllWindows()
-
-########################################################################  
 

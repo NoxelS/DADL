@@ -6,26 +6,30 @@
 # - pip install opencv-contrib-python opencv-python
 # - pip install imageio 
 # (evtl. via package-manager)
-########################################################################  
+########################################################################
 
-
-########################################################################  
+import sys
 import cv2			# pip3 install opencv-python
 import numpy as np 
 from scipy import ndimage
 from nn import Network
-########################################################################  
 
+# Load the network from a file
+networkPath = ""
+if len(sys.argv) > 1:
+  networkPath = sys.argv[1]
+  print("Loading network:", networkPath)
+else:
+  raise Exception("No network file given. Please provide a network file.\nExample: python live_test.py networks/trained_network.dat")
 
-########################################################################  
+nn = Network.load(networkPath)
+print("Finished loading network:", nn.sizes)
+
 # Parameter
-win_width, win_height	= 500,150
+win_width, win_height	= 500, 150
 # globals for mouse_callback
 pen_down, but3_down, old_x , old_y = False, False, 0, 0
-########################################################################  
 
-
-########################################################################  
 def mouse_cb(event, x, y, flags, param):
   global board, pen_down, but3_down, old_x, old_y
   but3_down = flags & 0x4
@@ -37,10 +41,7 @@ def mouse_cb(event, x, y, flags, param):
     old_x, old_y = x, y
   elif event == cv2.EVENT_LBUTTONUP:
     pen_down = False
-########################################################################  
 
-
-########################################################################  
 # main
 cv2.namedWindow('Board')
 cv2.moveWindow('Board', 1000,100)
@@ -49,11 +50,6 @@ board = np.zeros((win_height, win_width), np.uint8)
 cv2.rectangle(board, (50,50), (100,100), color=255, thickness=1)
 #cv2.imshow('Board', board)
 
-# NN - currently using trained_network_best_98.0.dat
-networkPath = "networks/trained_network_99.dat"
-nn = Network.load(networkPath)
-print("Current network:", networkPath)
-
 while True:
   key = cv2.waitKey(20) & 0xFF
   if key == 27:
@@ -61,7 +57,7 @@ while True:
   elif key == ord(' '):
     cv2.rectangle(board, (50,50), (100,100), color=0, thickness=1)
     win = board[50:100, 50:100]
-    win = ndimage.filters.gaussian_filter(win, sigma=1)
+    win = ndimage.gaussian_filter(win, sigma=1)
 
     data = []
 
@@ -74,18 +70,9 @@ while True:
     data = data / 255.0
 
     prediction = nn.feedforward(data)
-    max_value = np.argmax(prediction)
-
-    # Map max value to char
-    if max_value == 0:
-        max_value = 'a'
-    elif max_value == 1:
-        max_value = 'b'
-    elif max_value == 2:
-        max_value = 'c'
+    max_value = chr(ord('a') + np.argmax(prediction))
 
     # Print text on board
-
     board = np.zeros((win_height, win_width), np.uint8)
 
     # Print confidence on board
@@ -102,7 +89,7 @@ while True:
 
   cv2.rectangle(board, (50,50), (100,100), color=0, thickness=1)
   win = board[50:100, 50:100]
-  win = ndimage.filters.gaussian_filter(win, sigma=1)
+  win = ndimage.gaussian_filter(win, sigma=1)
 
   data = []
 
@@ -115,17 +102,8 @@ while True:
   data = data / 255.0
 
   prediction = nn.feedforward(data)
-  max_value = np.argmax(prediction)
+  max_value = chr(ord('a') + np.argmax(prediction))
 
-  # Map max value to char
-  if max_value == 0:
-      max_value = 'a'
-  elif max_value == 1:
-      max_value = 'b'
-  elif max_value == 2:
-      max_value = 'c'
-
-  # board = np.zeros((win_height, win_width), np.uint8)
   # Make board black on the right side
   cv2.rectangle(board, (103,0), (win_width,win_height), color=0, thickness=-1)
   if board[50:100, 50:100].any() == True:
