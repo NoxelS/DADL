@@ -53,10 +53,10 @@ class Network(object):
                 plotY.append(last_eval)
                 accuracy = last_eval/n_test
                 if not silent:
-                    print("Epoch {0}: {1} / {2} ({3}%)".format(j, last_eval, n_test, np.round(100 * last_eval/n_test, 2)))
+                    print(f"Epoch {j}: {last_eval} / {n_test} ({np.round(100 * last_eval/n_test, 2)}%)")
             else:
                 if not silent:
-                    print("Epoch {0} complete".format(j))
+                    print(f"Epoch {j} complete")
             
             # Abort training if accuracy is too low
             if j > 3 and accuracy < 0.9:
@@ -69,7 +69,7 @@ class Network(object):
             plt.plot(plotX, np.multiply(plotY,1/n_test))
             plt.xlabel("Epoch")
             plt.ylabel("Accuracy")
-            plt.title("Training for {0} epochs [{1}, {2}, {3}]".format(epochs, self.sizes[0], self.sizes[1], self.sizes[2]))
+            plt.title(f"Training for {epochs} epochs [{self.sizes[0]}, {self.sizes[1]}, {self.sizes[2]}]")
             plt.savefig("training.png")
             if not silent:
                 print("Training complete, saved plot as training.png")

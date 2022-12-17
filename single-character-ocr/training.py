@@ -4,12 +4,9 @@ from nn import Network
 # Translate the identifier to a vector, e.g. 'a' -> [1, 0, 0]
 # You can introduce your  own identifiers here
 def identifier_to_vector(identifier):
-    if identifier == 'a':
-        return np.array([1, 0, 0])
-    elif identifier == 'b':
-        return np.array([0, 1, 0])
-    elif identifier == 'c':
-        return np.array([0, 0, 1])
+	vector = np.zeros(3)
+	vector[ord(identifier)-ord('a')] = 1
+	return vector
 
 # Read the training data from the file. The file should have the following format:
 #   <identifier> <pixel 1> <pixel 2> ... <pixel 2500>
@@ -35,8 +32,8 @@ def read_training_data(path):
 # If the accuracy is not good enough, create a new network and start over
 # Saves the current best network to networks/trained_network_<accuracy>.dat
 def train_network_loop(training_data, structure, test_data=None):
-    print("Training network with {0} training examples and {1} validation chars".format(len(training_data), len(test_data)))
-    print("Network structure: {0}".format(structure))
+    print(f"Training network with {len(training_data)} training examples and {len(test_data)} validation chars")
+    print(f"Network structure: {structure}")
 
     found_best = False
     best_accuracy = 0
@@ -50,7 +47,7 @@ def train_network_loop(training_data, structure, test_data=None):
             best_accuracy = accuracy
             best_net = net
             best_net.save("networks/trained_network_" + str(int(np.round(100 *  best_accuracy))) + ".dat")
-            print("Found new best accuracy: {0}%".format(np.round(100 * best_accuracy)))
+            print(f"Found new best accuracy: {np.round(100 * best_accuracy)}%")
         
         # Stop if we have a good enough accuracy
         if best_accuracy > 0.99:
@@ -58,12 +55,12 @@ def train_network_loop(training_data, structure, test_data=None):
 
 # Train a single network and save it to a file
 def train_network(training_data, test_data, structure, save_path):
-    print("Training network with {0} training examples and {1} validation chars".format(len(training_data), len(test_data)))
-    print("Network structure: {0}".format(structure))
+    print(f"Training network with {len(training_data)} training examples and {len(test_data)} validation chars")
+    print(f"Network structure: {structure}")
     net = Network(structure)
-    accuracy =net.SGD(training_data, 40, 10, 3, test_data, False)
+    accuracy = net.SGD(training_data, 40, 10, 3, test_data, False)
     net.save(save_path)
-    print("Saved network with {0}% accuracy to {1}".format(np.round(100 * accuracy), save_path))
+    print(f"Saved network with {np.round(100 * accuracy)}% accuracy to {save_path}")
 
 if __name__ == "__main__":
     # Load the training data from file
@@ -73,3 +70,4 @@ if __name__ == "__main__":
     # Train the network with either train_network_loop or train_network
     # train_network_loop(training_data, [2500, 30, 3], test_data)
     train_network(training_data, test_data, [2500, 30, 3], "networks/trained_network.dat")
+
