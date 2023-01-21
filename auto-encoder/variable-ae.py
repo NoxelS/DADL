@@ -57,7 +57,7 @@ vae = Model(x, _x_out)
 # Loss function
 def vae_loss(x, _x_out):        # shape (batch_size, 28, 28)
     mean, log_var = encoder(x)  # shape (batch_size, k)
-    x = K.flatten(x)        # shape (batch_size, 784)
+    x = K.flatten(x)            # shape (batch_size, 784)
     _x_out = K.flatten(_x_out)  # shape (batch_size, 784)
 
     # Reconstruction loss
