@@ -36,11 +36,14 @@ if __name__ == "__main__":
     print(f"Training network with {len(training_data)} training examples and {len(validation_data)} validation chars")
     net = network.Network(
          [
-            layers.FullyConnectedLayer(2500, 30, misc.sigmoid, misc.sigmoid_prime),
+             layers.FullyConnectedLayer(
+                 2500, 30, misc.sigmoid, misc.sigmoid_prime),
             layers.FullyConnectedLayer(30, 3, misc.sigmoid, misc.sigmoid_prime),
          ]
     )
 
-    accuracy = net.sgd(training_data, 7, 10, 3, validation_data)
-
     print(net.layers[1].weights)
+
+
+    accuracy = net.sgd(training_data, 40, 10, 0.5, validation_data)
+
