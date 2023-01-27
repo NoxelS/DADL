@@ -132,3 +132,6 @@ dmypy.json
 *.zip
 
 */.vscode
+
+face-recognition/faces
+face-recognition-model
