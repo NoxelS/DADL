@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
-
+import os
 
 
 # Use this callback to update plots in the GUI
@@ -26,6 +26,17 @@ class PlotTrainingHistory(keras.callbacks.Callback):
         acc_y = []
         val_acc_y = []
 
+        # Training history
+        if not os.path.exists(r'training'):
+            os.makedirs(r'training')
+
+        # Clear the files if it's the first epoch
+        if epoch == 0:
+            for file in os.listdir(r'training'):
+                if file.endswith('.png') or file.endswith('.dat'):
+                    os.remove(os.path.join(r'training', file))
+
+        # Save current epoch data and fetch history
         with open(r'training/acc.dat', 'a') as f:
             f.write(f'\n{epoch},{logs["accuracy"]},{logs["val_accuracy"]}')
         
@@ -68,9 +79,8 @@ class PlotTrainingHistory(keras.callbacks.Callback):
         plt.savefig(r'training/accuracy.png')
         plt.clf()
 
+
 if __name__ == '__main__':
     # Test the callback
     plot_training_history = PlotTrainingHistory()
     plot_training_history.on_epoch_end(9, {'accuracy': 0.5, 'val_accuracy': 0.5, 'loss': 0.5, 'val_loss': 0.5})
-    # plot_training_history.on_epoch_end(2, {'accuracy': 0.4, 'val_accuracy': 0.2, 'loss': 0.1, 'val_loss': 0.4})
-    # plot_training_history.on_epoch_end(3, {'accuracy': 0.3, 'val_accuracy': 0.1, 'loss': 0.01, 'val_loss': 0.2})
