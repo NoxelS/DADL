@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
 import utils
+from keras.utils import plot_model
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable tensorflow warnings
 
 
@@ -21,10 +22,14 @@ class CNN(tf.keras.Model):
 
         # Define model architecture
         self.layer_array = [
-            tf.keras.layers.Conv2D(16, (4, 4), activation='relu', input_shape=(28, 28, 1)), # Batchsize x 28 x 28 x 1
+            tf.keras.layers.Input((28, 28, 1)), # Keras will automatically add a dimension for the batch size
+            tf.keras.layers.Conv2D(16, (4, 4), activation='relu'),
             tf.keras.layers.MaxPool2D((2, 2), padding='same'),
             tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Conv2D(32, (4, 4), activation='relu'), # Batchsize x 28 x 28 x 1
+            tf.keras.layers.Conv2D(32, (4, 4), activation='relu'),
+            tf.keras.layers.MaxPool2D((2, 2), padding='same'),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Conv2D(64, (4, 4), activation='relu'),
             tf.keras.layers.MaxPool2D((2, 2), padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Flatten(),
@@ -37,6 +42,13 @@ class CNN(tf.keras.Model):
         # Print model summary
         self.model = tf.keras.Sequential(self.layer_array)
         self.model.summary()
+
+        # Save model architecture if pydot and graphviz are installed
+        try:
+            dot_img_file = r'figures/model.png'
+            plot_model(self.model, to_file=dot_img_file, show_shapes=True)
+        except Exception as e:
+            print("Missing pydot or graphviz. Unable to save model architecture.")
 
         # Compile the model
         self.model.compile(optimizer='adam',
@@ -141,8 +153,9 @@ class CNN(tf.keras.Model):
             mean += np.mean(weights_list[i])
             std += np.std(weights_list[i])
         return mean / len(weights_list), std / len(weights_list)
+
     
-    def activation_map(self, x, layer_name):
+    def activation(self, x, layer_name):
         """
             Returns the activation map of a given input for a given layer
         """
@@ -165,24 +178,20 @@ if __name__ == '__main__':
     cnn = CNN('mnist', keep_checkpoints=True, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
 
     # Load model
-    cnn.model.load_weights('mnist.h5')
-    # Train the model
-    # cnn.fit()
+    # cnn.model.load_weights('mnist.h5')
 
 
-    # cnn.fit(epochs=2)
+    cnn.fit(epochs=10)
     cnn.test()
 
-    # cnn.model.save('mnist.h5')
     activation_imgaes = []
     for i in range(10):
         # Find a test image that is calssidied as i
         for j in range(len(y_test)):
             if y_test[j] == i:
-                print(f'Class {i}: {j} / {len(y_test)}')
                 # Reshape the image to a 4D tensor
                 x_tmp = x_test[j]
                 x_tmp = x_tmp.reshape(1, 28, 28, 1)
                 x_tmp = x_tmp.astype('float32') # Conv2d expects float32
-                utils.plot_activations(x_tmp, cnn, ['conv2d', 'conv2d_1', 'dense_1'], path=f'figures/activations_{i}.png')
+                utils.plot_activations(x_tmp, cnn, ['conv2d', 'max_pooling2d', 'conv2d_1', 'max_pooling2d_1', 'conv2d_2', 'max_pooling2d_2'], path=f'figures/activations_{i}.png')
                 break
