@@ -40,7 +40,7 @@ class CNN(tf.keras.Model):
         ]
 
         # Print model summary
-        self.model = tf.keras.Sequential(self.layer_array)
+        self.model = tf.keras.Sequential(self.layer_array, name=self.display_name)
         self.model.summary()
 
         # Save model architecture if pydot and graphviz are installed
@@ -79,12 +79,11 @@ class CNN(tf.keras.Model):
 
         # Data augmentation
         self.datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-            rotation_range=10,
+            rotation_range=25,
             width_shift_range=0.1,
             height_shift_range=0.1,
             shear_range=0.05,
             zoom_range=0.1,
-            fill_mode='nearest'
         )
 
         # Make sure to backup after each epochs
@@ -98,13 +97,13 @@ class CNN(tf.keras.Model):
         # Reduce learning rate if no improvement after 10 epochs
         self.reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
-            factor=0.1,
-            patience=10,
+            factor=0.75,
+            patience=8,
             verbose=0,
-            mode='auto',
-            min_delta=0.0001,
+            mode='max',
+            min_delta=0.0005,
             cooldown=0,
-            min_lr=0.0001
+            min_lr=0.000001
         )
 
         # Early stopping if no improvement after 20 epochs and restore best weights
@@ -181,8 +180,11 @@ if __name__ == '__main__':
     # cnn.model.load_weights('mnist.h5')
 
 
-    cnn.fit(epochs=10)
+    cnn.fit(epochs=1000)
     cnn.test()
+
+    # Get the missqualified images
+    utils.plot_missclassified_images(x_test, y_test, cnn, path='figures/missclassified.png')
 
     activation_imgaes = []
     for i in range(10):

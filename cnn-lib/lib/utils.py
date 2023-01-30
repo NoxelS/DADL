@@ -62,3 +62,26 @@ def plot_activations(img, cnn, layer_names, path=None):
         plt.savefig(path)
     else:
         plt.show()
+
+
+def plot_missclassified_images(x_test, y_test, cnn, path):
+    """
+        Plots the missclassified images of a given CNN
+    """
+    # Get missclassified images
+    y_pred = cnn.model.predict(x_test)
+    y_pred = np.argmax(y_pred, axis=1)
+    missclassified = np.where(y_pred != y_test)[0]
+    print(len(missclassified), "missclassified images")
+    # Plot missclassified images
+    fig = plt.figure(figsize=(10, 10))
+    for i, idx in enumerate(missclassified):
+        ax = fig.add_subplot(10, 10, i + 1)
+        ax.imshow(x_test[idx, :, :, 0], cmap='gray')
+        # invert colors
+        ax.imshow(1 - ax.images[0].get_array(), cmap='gray')
+        
+        ax.set_title("p:" + str(y_pred[idx]) + "/t:" + str(y_test[idx]))
+        ax.axis('off')
+    fig.tight_layout()
+    plt.savefig(path)
