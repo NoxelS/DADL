@@ -141,7 +141,6 @@ def gram_cam(cnn, img_path, layer_name):
     img = keras.preprocessing.image.load_img(img_path, target_size=cnn.image_size)
     img.save(img_path)
 
-    model_builder = keras.applications.xception.Xception
     preprocess_input = keras.applications.xception.preprocess_input
     decode_predictions = keras.applications.xception.decode_predictions
 
