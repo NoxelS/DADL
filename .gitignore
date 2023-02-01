@@ -134,3 +134,7 @@ dmypy.json
 
 face-recognition/faces
 face-recognition-model
+
+
+data/test_set/**
+data/train_set/**
