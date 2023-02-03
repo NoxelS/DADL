@@ -1,0 +1,5 @@
+# Python Version 3.9.13
+tensorflow==2.11.0
+numpy
+matplotlib
+scipy
