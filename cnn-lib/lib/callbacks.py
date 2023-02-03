@@ -4,20 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-
-# Use this callback to update plots in the GUI
-class UpdateTrainingBoard(keras.callbacks.Callback):
-    def __init__(self, training_board=None):
-        super().__init__()
-        self.training_board = training_board
-
-    def on_epoch_end(self, epoch, logs=None):
-        # self.training_board.update_plots()
-        print("Epoch: ", epoch)
-        keys = list(logs.keys())
-        print(keys)
-
-
 class PlotTrainingHistory(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
 
@@ -78,9 +64,3 @@ class PlotTrainingHistory(keras.callbacks.Callback):
         plt.legend(['Train', 'Test'], loc='upper left')
         plt.savefig(r'training/accuracy.png')
         plt.clf()
-
-
-if __name__ == '__main__':
-    # Test the callback
-    plot_training_history = PlotTrainingHistory()
-    plot_training_history.on_epoch_end(9, {'accuracy': 0.5, 'val_accuracy': 0.5, 'loss': 0.5, 'val_loss': 0.5})

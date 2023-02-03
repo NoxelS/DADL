@@ -1,7 +1,6 @@
 from lib.callbacks import *
 from lib.utils import *
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
 from keras.preprocessing.image import ImageDataGenerator
@@ -47,9 +46,6 @@ class CNN(tf.keras.Model):
                 tf.keras.layers.Conv2D(32, (4, 4), activation='relu'),
                 tf.keras.layers.MaxPool2D((2, 2), padding='same'),
                 tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Conv2D(64, (4, 4), activation='relu'),
-                tf.keras.layers.MaxPool2D((2, 2), padding='same'),
-                tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Flatten(),
                 tf.keras.layers.Dense(512, activation='relu'),
                 tf.keras.layers.BatchNormalization(),
@@ -70,13 +66,14 @@ class CNN(tf.keras.Model):
 
         # Compile the model
         self.model.compile(optimizer='adam',
-            loss='categorical_crossentropy',
+            loss='sparse_categorical_crossentropy',
             metrics=['accuracy'],
         )
 
         # Load weights if path is given
         if load_path is not None and os.path.exists(load_path):
             self.model.load_weights(load_path)
+            print("Loaded weights from " + load_path)
 
         # Checkpoints to save trained network weights
         self.checkpoint_path = r"backup/"
@@ -87,6 +84,7 @@ class CNN(tf.keras.Model):
             Initialize weights with random values from a normal distribution
             between 0 and 1
         """
+        print("INIT WEIGHTS HERE")
         weights_list = self.models.get_weights()
         for i in range(self.layer_array):
             weights_list[i] = np.random.normal(0, 1, size=weights_list[i].shape)
@@ -112,7 +110,7 @@ class CNN(tf.keras.Model):
             save_before_preemption=False
         )
 
-        # Reduce learning rate if no improvement after 10 epochs
+        # Reduce learning rate if no improvement after 8 epochs
         self.reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
             factor=0.75,
@@ -122,6 +120,13 @@ class CNN(tf.keras.Model):
             min_delta=0.0005,
             cooldown=0,
             min_lr=0.000001
+        )
+
+        # CSV logger to save training history
+        self.csv_logger = tf.keras.callbacks.CSVLogger(
+            f"training_history_{self.display_name}.csv",
+            separator=',',
+            append=True
         )
 
         # Early stopping if no improvement after 20 epochs and restore best weights
@@ -285,36 +290,8 @@ class CNN(tf.keras.Model):
             else:
                 x = layer.call(x)
 
-if __name__ == '__main__':
-    # Load and epochs the MNIST dataset
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-    x_train, x_test = x_train / 255.0, x_test / 255.0
-
-    # Add a channels dimension because the model expects a 4D input (batchsize x height x width x channels)
-    x_train = x_train[..., tf.newaxis]
-    x_test = x_test[..., tf.newaxis]
-
-    # Create a CNN instance
-    cnn = CNN('mnist', keep_checkpoints=True, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
-
-    # Load model
-    # cnn.model.load_weights('mnist.h5')
-
-
-    cnn.fit(epochs=1000)
-    cnn.test()
-
-    # Get the missqualified images
-    plot_missclassified_images(x_test, y_test, cnn, path='figures/missclassified.png')
-
-    activation_imgaes = []
-    for i in range(10):
-        # Find a test image that is calssidied as i
-        for j in range(len(y_test)):
-            if y_test[j] == i:
-                # Reshape the image to a 4D tensor
-                x_tmp = x_test[j]
-                x_tmp = x_tmp.reshape(1, 28, 28, 1)
-                x_tmp = x_tmp.astype('float32') # Conv2d expects float32
-                plot_activations(x_tmp, cnn, ['conv2d', 'max_pooling2d', 'conv2d_1', 'max_pooling2d_1', 'conv2d_2', 'max_pooling2d_2'], path=f'figures/activations_{i}.png')
-                break
+    def save(self, path):
+        """
+            Saves the model
+        """
+        self.model.save(path)

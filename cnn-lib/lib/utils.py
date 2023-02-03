@@ -3,14 +3,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from tensorflow import keras
-import os
 from lib.cnn import *
+import keras
+import scipy
 
 # Display
 from IPython.display import Image, display
 import matplotlib.cm as cm
 
-def plot_activations(img, cnn, layer_names, path=None):
+def plot_activations(img, cnn, layer_names, path=None, hide_original=False):
     """
         Plots the activation maps of a given input for a given layer
     """
@@ -25,10 +26,11 @@ def plot_activations(img, cnn, layer_names, path=None):
 
 
     # Plot input image in the center
-    ax = plt.subplot(gs[(rows - 1) // 2, 0])
-    ax.imshow(img[0, :, :, 0])
-    ax.set_aspect('equal')
-    ax.axis('off')
+    if not hide_original:
+        ax = plt.subplot(gs[(rows - 1) // 2, 0])
+        ax.imshow(img[0, :, :, 0])
+        ax.set_aspect('equal')
+        ax.axis('off')
 
 
     # Plot activation maps
@@ -65,6 +67,7 @@ def plot_activations(img, cnn, layer_names, path=None):
     if path:
         plt.savefig(path)
     else:
+        plt.margins(0, 0)
         plt.show()
 
 
@@ -91,76 +94,82 @@ def plot_missclassified_images(x_test, y_test, cnn, path):
     plt.savefig(path)
 
 
-def get_img_array(img_path, size):
-    img = keras.preprocessing.image.load_img(img_path, target_size=size, color_mode='grayscale')
-    # `array` is a float32 Numpy array of shape (200, 200, 1)
-    array = keras.preprocessing.image.img_to_array(img)
-    # We add a dimension to transform our array into a "batch"
-    # of size (1, 200, 200, 1)
-    array = np.expand_dims(array, axis=0)
-    return array
+def get_class_activation_map(model, img):
+    img = np.expand_dims(img, axis=0) # 1 x 28 x 28 x 1
+
+    # predict to get the winning digit
+    predictions = model.predict(img)
+    label_index = np.argmax(predictions)
+
+    # Get input weights to the softmax of the winning class.
+    class_weights = model.layers[-1].get_weights()[0]
+    class_weights_winner = class_weights[:, label_index]
+    
+    # get the final conv layer
+    final_conv_layer = model.get_layer("conv2d_1")
+    
+    # create a function to fetch the final conv layer output maps
+    get_output = keras.backend.function([model.layers[0].input], [final_conv_layer.output, model.layers[-1].output])
+    [conv_outputs, predictions] = get_output([img])
+    
+    # squeeze conv map to shape image to size 
+    conv_outputs = np.squeeze(conv_outputs) # 24 x 24 x 32
+    
+    # bilinear upsampling to resize each filtered image to size of original image 
+    mat_for_mult = scipy.ndimage.zoom(
+        conv_outputs, (28/24, 28/24, 1), order=1)  # dim: 28 x 28 x 32
+
+    # get class activation map for object class that is predicted to be in the image
+    final_output = np.dot(mat_for_mult.reshape((28*28, 32)), class_weights_winner).reshape(28,28)
+
+    return final_output
 
 
+#Für die Nummerierung der layer Benutzen wir die Nummerierung, die Christian in dem Skript bei seiner
+#Einführung in die Welt der neuronalen Netzwerke angewandt hat.
+def shortening_model_to_layer(layer, model):
+    hidden_layers = [model.layers[i].output for i in range(0,layer)]
+    shortened_model = Model(inputs = model.inputs, outputs = hidden_layers)
+    return shortened_model
 
-def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
-    # First, we create a model that maps the input image to the activations
-    # of the last conv layer as well as the output predictions
-    grad_model = tf.keras.models.Model(
-        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
-    )
+def activation_maps_up_to_last_layer(shortened_model, image):
+    return shortened_model.predict(image)
 
-    # Then, we compute the gradient of the top predicted class for our input image
-    # with respect to the activations of the last conv layer
-    with tf.GradientTape() as tape:
-        last_conv_layer_output, preds = grad_model(img_array)
-        if pred_index is None:
-            pred_index = tf.argmax(preds[0])
-        class_channel = preds[:, pred_index]
+def show_activation_maps_of_desired_layer(all_activation_maps, layer):
+    if layer != 1:
+        desired_activation_map = all_activation_maps[layer-1]
+    else:
+        desired_activation_map = all_activation_maps
 
-    # This is the gradient of the output neuron (top predicted or chosen)
-    # with regard to the output feature map of the last conv layer
-    grads = tape.gradient(class_channel, last_conv_layer_output)
-
-    # This is a vector where each entry is the mean intensity of the gradient
-    # over a specific feature map channel
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-
-    # We multiply each channel in the feature map array
-    # by "how important this channel is" with regard to the top predicted class
-    # then sum all the channels to obtain the heatmap class activation
-    last_conv_layer_output = last_conv_layer_output[0]
-    heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
-    heatmap = tf.squeeze(heatmap)
-
-    # For visualization purpose, we will also normalize the heatmap between 0 & 1
-    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
-    return heatmap.numpy()
-
-def gram_cam(cnn, img_path, layer_name):
-    # Image size is possible != to cnn.image_size so we need to resize it an save it
-    img = keras.preprocessing.image.load_img(img_path, target_size=cnn.image_size)
-    img.save(img_path)
-
-    preprocess_input = keras.applications.xception.preprocess_input
-    decode_predictions = keras.applications.xception.decode_predictions
-
-    # Prepare image
-    img_array = preprocess_input(get_img_array(img_path, size=cnn.image_size))
-
-    # Make model
-    model = cnn.model
-
-    # Remove last layer's softmax
-    model.layers[-1].activation = None
-
-    # Print what the top predicted class is
-    print(img_array.shape)
-    preds = model.predict(img_array)
-    print("Predicted:", decode_predictions(preds, top=1)[0])
-
-    # Generate class activation heatmap
-    heatmap = make_gradcam_heatmap(img_array, model, layer_name)
-
-    # Display heatmap
-    plt.matshow(heatmap)
+    for i in range(desired_activation_map.shape[-1]):
+        ax = plt.subplot(1, desired_activation_map.shape[-1], i+1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        plt.imshow(desired_activation_map[0,:,:,i]) 
     plt.show()
+
+# shortened_model = shortening_model_to_layer(3, cnn)
+# activation_maps = activation_maps_up_to_last_layer(shortened_model, np.array([train_images[6]]))
+# show_activation_maps_of_desired_layer(activation_maps, 3)
+
+
+#layer werden nach Zählweise im skript durchgezählt
+def kernel(model, layer):
+    kernels, biases = model.layers[layer-1].get_weights()
+    return kernels
+
+def kernel_visualisieren(kernels):
+    n_kernels = kernels.shape[3]
+
+    #Normierung der weights innerhalb der kernel
+    kernels = (kernels - kernels.min()) / (kernels.max() - kernels.min())
+
+    #Anzeigen aller kernels in einem Fenster
+    for i in range(n_kernels):
+        ax = plt.subplot(1, n_kernels, i+1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.imshow(kernels[:,:,0,i], cmap='gray')
+    plt.show()
+
+# kernel_visualisieren(kernel(cnn, 1))

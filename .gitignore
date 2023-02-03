@@ -138,3 +138,7 @@ face-recognition-model
 
 data/test_set/**
 data/train_set/**
+
+**/backup/**
+
+**/.vscode/**
