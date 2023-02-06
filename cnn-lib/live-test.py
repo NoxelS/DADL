@@ -1,6 +1,7 @@
 from lib.cnn import CNN
 from lib.board import Board
 import tkinter as tk
+import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disable tensorflow warnings
 
 
